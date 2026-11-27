@@ -69,7 +69,7 @@ crtsh  | subdomain       | www.example.com             | high
 ### Arquitetura
 
 - `core/` — modelos, contrato de `Provider`, registry e orquestração
-- `providers/` — uma fonte pública por arquivo (RDAP, Certificate Transparency…)
+- `providers/` — uma fonte pública por arquivo (RDAP, Certificate Transparency, GeoIP…)
 - `utils/` — cliente HTTP educado (rate limit, retry, User-Agent próprio)
 - `cli.py` — interface de linha de comando (Typer + Rich)
 

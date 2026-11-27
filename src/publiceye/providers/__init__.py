@@ -1,6 +1,6 @@
 """Providers embutidos e seu carregamento."""
 
-from publiceye.providers import crtsh, rdap  # noqa: F401
+from publiceye.providers import crtsh, geoip, rdap  # noqa: F401
 
 
 def load() -> None:
