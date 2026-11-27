@@ -28,20 +28,19 @@ Todas públicas e com API/ToS que permitem uso.
 
 **Implementadas**
 
-- Domínios e DNS: RDAP, DNS over HTTPS (DoH) e Certificate Transparency (crt.sh)
+- Domínios e DNS: RDAP, WHOIS, DNS over HTTPS (DoH) e Certificate Transparency (crt.sh)
 - GeoIP / ASN de IPs (ipwho.is)
+- Geocodificação direta e reversa (Nominatim / OSM)
 - Endereços e CEPs (ViaCEP)
 - Dados públicos de empresas por CNPJ (BrasilAPI / Receita Federal)
 - Tabela FIPE (preço de veículos)
-- Clima e geocodificação (Open-Meteo)
+- Clima (Open-Meteo)
 - Cotações de criptomoedas (CoinGecko)
 - Dados do mandato de deputados federais (Câmara dos Deputados)
 
 **Planejadas**
 
-- WHOIS
 - Dados abertos governamentais (Brasil e internacionais)
-- Geocodificação direta e reversa (Nominatim / OSM)
 - APIs de notícias e conteúdo aberto
 
 > Nenhuma fonte entra sem revisão de termos de uso e licença.
@@ -136,7 +135,7 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] DNS público via DNS over HTTPS (DoH)
 - [ ] Cache de respostas por provider
 - [x] WHOIS (TCP porta 43) para domínios e IPs
-- [ ] Geocodificação
+- [x] Geocodificação direta e reversa (Nominatim / OSM)
 - [ ] Frontend de grafo (estilo Maltego)
 - [ ] Testes e documentação de cada fonte
 
