@@ -12,16 +12,6 @@ PublicEye é uma ferramenta de **OSINT (Open-Source Intelligence)** construída 
 - **Privacidade por padrão.** Respeita `robots.txt`, limites de taxa e termos de uso das fontes.
 - **Reprodutibilidade.** Toda consulta pode ser auditada e refeita.
 
-## O que é / o que NÃO é
-
-| ✅ É | ❌ Não é |
-| --- | --- |
-| Consulta a APIs públicas e registradas | Uso de dados vazados (`combo lists`, breaches) |
-| Enriquecimento de dados abertos | Doxxing ou perseguição |
-| Correlação de fontes oficiais | Acesso não autorizado a sistemas |
-| Automação ética e com rate limit | Bypass de autenticação, paywall ou CAPTCHA |
-| Ferramenta educacional e de pesquisa | Vigilância de pessoas sem consentimento |
-
 ## Fontes
 
 Todas públicas e com API/ToS que permitem uso.
