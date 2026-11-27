@@ -186,13 +186,18 @@ def camara(
     deputado_id: Optional[int] = typer.Option(None, "--id", help="ID do deputado na API."),
     uf: Optional[str] = typer.Option(None, "--uf", help="Filtrar por UF, ex.: SP."),
     partido: Optional[str] = typer.Option(None, "--partido", help="Filtrar por partido, ex.: PT."),
+    fetch_all: bool = typer.Option(
+        False, "--all", help="Lista todos os deputados (paginando), em vez de um só."
+    ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
 ) -> None:
     """Dados públicos do mandato de um deputado federal (Câmara dos Deputados)."""
     try:
         report = asyncio.run(
-            consultar_deputado(nome, deputado_id=deputado_id, uf=uf, partido=partido)
+            consultar_deputado(
+                nome, deputado_id=deputado_id, uf=uf, partido=partido, fetch_all=fetch_all
+            )
         )
     except ValueError as exc:
         console.print(f"[red]Erro:[/red] {exc}")

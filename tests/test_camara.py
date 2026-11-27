@@ -98,3 +98,24 @@ def test_no_match_raises(monkeypatch):
 def test_requires_name_or_id():
     with pytest.raises(ValueError):
         asyncio.run(cm.consultar_deputado())
+
+
+PAGE1 = {
+    "dados": [{"id": 1, "nome": "Ana", "siglaPartido": "PP", "siglaUf": "AL"}],
+    "links": [{"rel": "next", "href": "https://api/pagina=2"}],
+}
+PAGE2 = {
+    "dados": [{"id": 2, "nome": "Bruno", "siglaPartido": "PT", "siglaUf": "SP"}],
+    "links": [],
+}
+
+
+def test_all_paginates_through_next_links(monkeypatch):
+    report = _run(monkeypatch, [PAGE1, PAGE2], fetch_all=True)
+    assert [f.kind for f in report.findings] == ["match", "match"]
+    assert {f.data["id"] for f in report.findings} == {1, 2}
+
+
+def test_all_without_name_lists_everyone(monkeypatch):
+    report = _run(monkeypatch, [SEARCH_MULTI], fetch_all=True)
+    assert len(report.findings) == 2

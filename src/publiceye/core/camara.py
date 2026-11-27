@@ -24,21 +24,28 @@ async def consultar_deputado(
     deputado_id: int | None = None,
     uf: str | None = None,
     partido: str | None = None,
+    fetch_all: bool = False,
     ctx: ProviderContext | None = None,
 ) -> Report:
-    """Busca um deputado por nome (ou id) e devolve um Report com o mandato."""
-    if not nome and deputado_id is None:
-        raise ValueError("Informe um nome ou --id do deputado.")
+    """Busca um deputado por nome (ou id) e devolve um Report com o mandato.
+
+    Com ``fetch_all=True``, lista todos os deputados (paginando), sem detalhar.
+    """
+    if not fetch_all and not nome and deputado_id is None:
+        raise ValueError("Informe um nome, --id ou use --all.")
 
     ctx = ctx or ProviderContext()
-    report = Report(target=nome or f"id {deputado_id}", target_type="politico")
+    report = Report(
+        target=nome or (f"id {deputado_id}" if deputado_id else "todos os deputados"),
+        target_type="politico",
+    )
 
     async with HttpClient(ctx, min_interval=0.5) as http:
         if deputado_id is None:
-            matches = await _search(http, nome or "", uf, partido)
+            matches = await _search(http, nome or "", uf, partido, fetch_all=fetch_all)
             if not matches:
                 raise ValueError(f"Nenhum deputado encontrado para {nome!r}.")
-            if len(matches) > 1:
+            if fetch_all or len(matches) > 1:
                 for dep in matches:
                     report.findings.append(
                         Finding(
@@ -60,15 +67,49 @@ async def consultar_deputado(
 
 
 async def _search(
-    http: HttpClient, nome: str, uf: str | None, partido: str | None
+    http: HttpClient,
+    nome: str,
+    uf: str | None,
+    partido: str | None,
+    fetch_all: bool = False,
 ) -> list[dict]:
-    params: dict = {"nome": nome, "itens": "15", "ordem": "ASC", "ordenarPor": "nome"}
+    params: dict = {
+        "nome": nome,
+        "itens": "1000" if fetch_all else "15",
+        "ordem": "ASC",
+        "ordenarPor": "nome",
+    }
     if uf:
         params["siglaUf"] = uf.upper()
     if partido:
         params["siglaPartido"] = partido.upper()
+
     data = await http.get_json(f"{BASE}/deputados", params=params)
-    return data.get("dados", []) if isinstance(data, dict) else []
+    if not isinstance(data, dict):
+        return []
+
+    results = list(data.get("dados", []))
+    if not fetch_all:
+        return results
+
+    # Segue os links "next" até o fim (com trava de segurança).
+    next_url = _next_link(data)
+    pages = 1
+    while next_url and pages < 20:
+        data = await http.get_json(next_url)
+        if not isinstance(data, dict):
+            break
+        results.extend(data.get("dados", []))
+        next_url = _next_link(data)
+        pages += 1
+    return results
+
+
+def _next_link(data: dict) -> str | None:
+    for link in data.get("links", []) or []:
+        if link.get("rel") == "next":
+            return link.get("href")
+    return None
 
 
 async def _detail(http: HttpClient, deputado_id: int) -> dict:
