@@ -41,7 +41,7 @@ Todas públicas e com API/ToS que permitem uso.
 
 - WHOIS
 - Dados abertos governamentais (Brasil e internacionais)
-- Geocodificação e mapas abertos (Nominatim / OSM)
+- Geocodificação direta e reversa (Nominatim / OSM)
 - APIs de notícias e conteúdo aberto
 
 > Nenhuma fonte entra sem revisão de termos de uso e licença.
@@ -62,12 +62,15 @@ publiceye providers                    # lista as fontes disponíveis
 publiceye scan example.com             # coleta em domínio (usa todos os providers)
 publiceye scan example.com -p rdap     # só um provider
 publiceye scan example.com -p dns      # registros DNS via DoH
+publiceye scan example.com -p whois    # registro WHOIS (porta 43)
 publiceye scan 8.8.8.8                 # IP (inclui DNS reverso/PTR)
 publiceye cep 01310-100                # endereço de um CEP (ViaCEP)
 publiceye cnpj 11.222.333/0001-81      # dados públicos de uma empresa (CNPJ)
 publiceye weather -23.55,-46.63        # clima atual por coordenadas (Open-Meteo)
 publiceye weather "São Paulo"          # clima atual por cidade (Open-Meteo)
 publiceye coin bitcoin                 # cotação de criptomoeda (CoinGecko)
+publiceye geocode "Avenida Paulista, São Paulo"   # endereço → coordenadas
+publiceye geocode -23.55,-46.63 --reverse         # coordenadas → endereço
 publiceye fipe Fiat Uno --ano 2019     # preço de veículo na Tabela FIPE
 publiceye camara "Arthur Lira"         # dados do mandato de um deputado
 publiceye scan exemplo.com --json      # saída JSON
@@ -81,6 +84,7 @@ Alvo: example.com (domain) — 36 achados
 Fonte  | Tipo            | Valor                       | Confiança
 rdap   | event:created   | 1995-08-14T04:00:00Z        | high
 rdap   | nameserver      | hera.ns.cloudflare.com      | high
+whois  | whois:registrar | RESERVED-Internet Assigned… | high
 dns    | dns:mx          | 10 mail.example.com         | high
 crtsh  | subdomain       | www.example.com             | high
 ...
@@ -89,7 +93,7 @@ crtsh  | subdomain       | www.example.com             | high
 ### Arquitetura
 
 - `core/` — modelos, contrato de `Provider`, registry e orquestração
-- `providers/` — uma fonte pública por arquivo (RDAP, DNS/DoH, Certificate Transparency, GeoIP…)
+- `providers/` — uma fonte pública por arquivo (RDAP, WHOIS, DNS/DoH, Certificate Transparency, GeoIP…)
 - `utils/` — cliente HTTP educado (rate limit, retry, User-Agent próprio)
 - `cli.py` — interface de linha de comando (Typer + Rich)
 
@@ -131,7 +135,8 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] Mais fontes de dados abertos e GeoIP (ViaCEP, CNPJ, FIPE, Câmara, Open-Meteo, CoinGecko, ipwho.is)
 - [x] DNS público via DNS over HTTPS (DoH)
 - [ ] Cache de respostas por provider
-- [ ] WHOIS e geocodificação
+- [x] WHOIS (TCP porta 43) para domínios e IPs
+- [ ] Geocodificação
 - [ ] Frontend de grafo (estilo Maltego)
 - [ ] Testes e documentação de cada fonte
 

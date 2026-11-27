@@ -20,13 +20,20 @@ CNPJ_RE = re.compile(r"^\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}$")
 COORDS_RE = re.compile(r"^(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)$")
 
 
-def is_coordinates(value: str) -> bool:
-    """Confere se o alvo é `lat,lon` dentro dos intervalos válidos."""
+def parse_coordinates(value: str) -> tuple[float, float] | None:
+    """Interpreta `lat,lon` válido; devolve None se o formato/faixa não bater."""
     match = COORDS_RE.match(value.strip())
     if not match:
-        return False
+        return None
     lat, lon = float(match.group(1)), float(match.group(2))
-    return -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0
+    if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
+        return lat, lon
+    return None
+
+
+def is_coordinates(value: str) -> bool:
+    """Confere se o alvo é `lat,lon` dentro dos intervalos válidos."""
+    return parse_coordinates(value) is not None
 
 
 def is_valid_cnpj(value: str) -> bool:

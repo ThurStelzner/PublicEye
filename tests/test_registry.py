@@ -12,6 +12,7 @@ def test_builtin_providers_registered():
         "viacep",
         "open-meteo",
         "coingecko",
+        "nominatim",
     } <= names
 
 
@@ -32,5 +33,7 @@ def test_providers_for_weather_and_crypto():
     load_builtin()
     weather = {cls.name for cls in providers_for(TargetType.WEATHER)}
     crypto = {cls.name for cls in providers_for(TargetType.CRYPTO)}
+    place = {cls.name for cls in providers_for(TargetType.PLACE)}
     assert weather == {"open-meteo"}
     assert crypto == {"coingecko"}
+    assert place == {"nominatim"}

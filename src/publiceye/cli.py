@@ -15,7 +15,7 @@ from publiceye import __version__
 from publiceye.core.camara import consultar_deputado
 from publiceye.core.fipe import search_fipe
 from publiceye.core.models import TargetType
-from publiceye.core.provider import detect_target_type
+from publiceye.core.provider import detect_target_type, parse_coordinates
 from publiceye.core.registry import all_providers, load_builtin
 from publiceye.core.runner import run_scan
 
@@ -55,7 +55,8 @@ def list_providers() -> None:
 @app.command()
 def scan(
     target: str = typer.Argument(
-        ..., help="Domínio, IP, e-mail, CEP, CNPJ ou coordenadas (lat,lon)."
+        ...,
+        help="Domínio, IP, e-mail, CEP, CNPJ, coordenadas (lat,lon) ou local.",
     ),
     provider: Optional[list[str]] = typer.Option(
         None, "--provider", "-p", help="Executar só estes providers (repetível)."
@@ -63,7 +64,10 @@ def scan(
     target_type: Optional[str] = typer.Option(
         None,
         "--type",
-        help="Força o tipo do alvo: domain | ip | email | cep | cnpj | weather | crypto.",
+        help=(
+            "Força o tipo do alvo: domain | ip | email | cep | cnpj | "
+            "weather | crypto | place."
+        ),
     ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(
@@ -158,6 +162,33 @@ def coin(
     _ensure_providers()
     report = asyncio.run(
         run_scan(value, providers=["coingecko"], target_type=TargetType.CRYPTO)
+    )
+    _emit(report, as_json, output)
+
+
+@app.command(context_settings={"ignore_unknown_options": True})
+def geocode(
+    value: str = typer.Argument(
+        ...,
+        metavar="LOCAL",
+        help="Endereço/local (ex.: 'Avenida Paulista, São Paulo') ou lat,lon com --reverse.",
+    ),
+    reverse: bool = typer.Option(
+        False,
+        "--reverse",
+        "-r",
+        help="Geocodificação reversa: trata o alvo como coordenadas (lat,lon).",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Geocodificação direta (endereço → coordenadas) e reversa (Nominatim)."""
+    _ensure_providers()
+    if reverse and parse_coordinates(value) is None:
+        console.print(f"[red]Coordenadas inválidas:[/red] {value!r}")
+        raise typer.Exit(code=2)
+    report = asyncio.run(
+        run_scan(value, providers=["nominatim"], target_type=TargetType.PLACE)
     )
     _emit(report, as_json, output)
 

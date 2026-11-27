@@ -6,9 +6,11 @@ from publiceye.providers import (  # noqa: F401
     crtsh,
     dns,
     geoip,
+    nominatim,
     open_meteo,
     rdap,
     viacep,
+    whois,
 )
 
 
