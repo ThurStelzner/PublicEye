@@ -74,6 +74,10 @@ publiceye fipe Fiat Uno --ano 2019     # preço de veículo na Tabela FIPE
 publiceye camara "Arthur Lira"         # dados do mandato de um deputado
 publiceye scan exemplo.com --json      # saída JSON
 publiceye scan exemplo.com -o out.json # salva o relatório
+publiceye cache info                   # onde está o cache e quantas entradas
+publiceye cache clear                  # limpa o cache
+publiceye --no-cache scan exemplo.com  # ignora o cache nesta execução
+publiceye --cache-ttl 300 scan exemplo.com  # validade do cache em segundos
 ```
 
 Exemplo de saída:
@@ -93,7 +97,7 @@ crtsh  | subdomain       | www.example.com             | high
 
 - `core/` — modelos, contrato de `Provider`, registry e orquestração
 - `providers/` — uma fonte pública por arquivo (RDAP, WHOIS, DNS/DoH, Certificate Transparency, GeoIP…)
-- `utils/` — cliente HTTP educado (rate limit, retry, User-Agent próprio)
+- `utils/` — cliente HTTP educado (rate limit, retry, User-Agent próprio, cache em disco)
 - `cli.py` — interface de linha de comando (Typer + Rich)
 
 ### Criando um novo provider
@@ -115,6 +119,18 @@ class MinhaFonte(Provider):
         ...
 ```
 
+### Cache de respostas
+
+Toda requisição GET feita pelos providers é guardada em disco com TTL
+(padrão: 1 hora). Requisições idênticas (mesma URL e parâmetros) são
+reaproveitadas dentro dessa janela, o que reduz chamadas, respeita limites de
+taxa e torna as consultas reprodutíveis.
+
+- Diretório padrão: cache do SO (ex.: `%LOCALAPPDATA%\publiceye\cache` no Windows)
+- Variáveis de ambiente: `PUBLICEEYE_CACHE_DIR`, `PUBLICEEYE_CACHE_TTL`, `PUBLICEEYE_NO_CACHE`
+- Flags globais: `--no-cache`, `--cache-ttl <segundos>`, `--cache-dir <dir>`
+- Comandos: `publiceye cache info` e `publiceye cache clear`
+
 ## Uso ético
 
 Use o PublicEye apenas para:
@@ -133,9 +149,10 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] CLI com saída em tabela e JSON
 - [x] Mais fontes de dados abertos e GeoIP (ViaCEP, CNPJ, FIPE, Câmara, Open-Meteo, CoinGecko, ipwho.is)
 - [x] DNS público via DNS over HTTPS (DoH)
-- [ ] Cache de respostas por provider
+- [x] Cache de respostas HTTP em disco (por requisição, com TTL)
 - [x] WHOIS (TCP porta 43) para domínios e IPs
 - [x] Geocodificação direta e reversa (Nominatim / OSM)
+- [ ] Frontend de grafo
 
 ## Licença
 
