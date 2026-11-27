@@ -4,6 +4,7 @@ from publiceye.providers import (  # noqa: F401
     cnpj,
     coingecko,
     crtsh,
+    dns,
     geoip,
     open_meteo,
     rdap,
