@@ -10,6 +10,8 @@ from publiceye.core.models import TargetType
         ("example.com", TargetType.DOMAIN),
         ("sub.example.co.uk", TargetType.DOMAIN),
         ("8.8.8.8", TargetType.IP),
+        ("01310-100", TargetType.CEP),
+        ("01310100", TargetType.CEP),
         ("a.b@example.com", TargetType.EMAIL),
         ("not a target", TargetType.UNKNOWN),
         ("999.1.1.1", TargetType.UNKNOWN),

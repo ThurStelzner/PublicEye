@@ -19,6 +19,7 @@ class TargetType(str, Enum):
     DOMAIN = "domain"
     IP = "ip"
     EMAIL = "email"
+    CEP = "cep"
     UNKNOWN = "unknown"
 
 

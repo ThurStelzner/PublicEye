@@ -15,6 +15,7 @@ IPV4_RE = re.compile(
     r"^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$"
 )
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+CEP_RE = re.compile(r"^\d{5}-?\d{3}$")
 
 
 def detect_target_type(target: str) -> TargetType:
@@ -24,6 +25,8 @@ def detect_target_type(target: str) -> TargetType:
         return TargetType.EMAIL
     if IPV4_RE.match(t):
         return TargetType.IP
+    if CEP_RE.match(t):
+        return TargetType.CEP
     if DOMAIN_RE.match(t):
         return TargetType.DOMAIN
     return TargetType.UNKNOWN

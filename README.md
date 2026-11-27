@@ -31,6 +31,7 @@ Todas públicas e com API/ToS que permitem uso:
 - Certificados públicos (Certificate Transparency / crt.sh)
 - Geocodificação e mapas abertos (Nominatim / OSM)
 - Registros públicos de empresas e diários oficiais
+- Endereços e CEPs (ViaCEP)
 - APIs de notícias e conteúdo aberto
 
 > Nenhuma fonte entra sem revisão de termos de uso e licença.
@@ -51,6 +52,7 @@ publiceye providers                    # lista as fontes disponíveis
 publiceye scan example.com             # coleta em domínio (usa todos os providers)
 publiceye scan example.com -p rdap     # só um provider
 publiceye scan 8.8.8.8                 # IP
+publiceye cep 01310-100                # endereço de um CEP (ViaCEP)
 publiceye scan exemplo.com --json      # saída JSON
 publiceye scan exemplo.com -o out.json # salva o relatório
 ```

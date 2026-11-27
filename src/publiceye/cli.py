@@ -52,12 +52,12 @@ def list_providers() -> None:
 
 @app.command()
 def scan(
-    target: str = typer.Argument(..., help="Domínio, IP ou e-mail a investigar."),
+    target: str = typer.Argument(..., help="Domínio, IP, e-mail ou CEP a investigar."),
     provider: Optional[list[str]] = typer.Option(
         None, "--provider", "-p", help="Executar só estes providers (repetível)."
     ),
     target_type: Optional[str] = typer.Option(
-        None, "--type", help="Força o tipo do alvo: domain | ip | email."
+        None, "--type", help="Força o tipo do alvo: domain | ip | email | cep."
     ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(
@@ -83,16 +83,34 @@ def scan(
     report = asyncio.run(
         run_scan(target, providers=provider, target_type=ttype)
     )
-    data = report.to_dict()
+    _emit(report, as_json, output)
 
+
+@app.command()
+def cep(
+    value: str = typer.Argument(..., metavar="CEP", help="CEP, ex.: 01310-100 ou 01310100."),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Consulta um CEP (endereço completo via ViaCEP)."""
+    _ensure_providers()
+    if detect_target_type(value) is not TargetType.CEP:
+        console.print(f"[red]CEP inválido:[/red] {value!r}")
+        raise typer.Exit(code=2)
+    report = asyncio.run(
+        run_scan(value, providers=["viacep"], target_type=TargetType.CEP)
+    )
+    _emit(report, as_json, output)
+
+
+def _emit(report, as_json: bool, output: Optional[Path]) -> None:
+    data = report.to_dict()
     if output:
         output.write_text(json.dumps(data, indent=2, ensure_ascii=False), "utf-8")
         console.print(f"[green]Relatório salvo em[/green] {output}")
-
     if as_json:
         console.print_json(json.dumps(data))
         return
-
     _print_report(data)
 
 
