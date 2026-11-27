@@ -22,18 +22,26 @@ PublicEye é uma ferramenta de **OSINT (Open-Source Intelligence)** construída 
 | Automação ética e com rate limit | Bypass de autenticação, paywall ou CAPTCHA |
 | Ferramenta educacional e de pesquisa | Vigilância de pessoas sem consentimento |
 
-## Fontes planejadas
+## Fontes
 
-Todas públicas e com API/ToS que permitem uso:
+Todas públicas e com API/ToS que permitem uso.
 
-- Dados abertos governamentais (Brasil e internacionais)
-- APIs de domínio e DNS (WHOIS, RDAP)
-- Certificados públicos (Certificate Transparency / crt.sh)
-- Geocodificação e mapas abertos (Nominatim / OSM)
-- Registros públicos de empresas e diários oficiais (ex.: CNPJ via BrasilAPI)
+**Implementadas**
+
+- Domínios e DNS: RDAP, DNS over HTTPS (DoH) e Certificate Transparency (crt.sh)
+- GeoIP / ASN de IPs (ipwho.is)
 - Endereços e CEPs (ViaCEP)
-- Clima e geocodificação abertos (Open-Meteo)
+- Dados públicos de empresas por CNPJ (BrasilAPI / Receita Federal)
+- Tabela FIPE (preço de veículos)
+- Clima e geocodificação (Open-Meteo)
 - Cotações de criptomoedas (CoinGecko)
+- Dados do mandato de deputados federais (Câmara dos Deputados)
+
+**Planejadas**
+
+- WHOIS
+- Dados abertos governamentais (Brasil e internacionais)
+- Geocodificação e mapas abertos (Nominatim / OSM)
 - APIs de notícias e conteúdo aberto
 
 > Nenhuma fonte entra sem revisão de termos de uso e licença.
@@ -53,12 +61,15 @@ Depois:
 publiceye providers                    # lista as fontes disponíveis
 publiceye scan example.com             # coleta em domínio (usa todos os providers)
 publiceye scan example.com -p rdap     # só um provider
-publiceye scan 8.8.8.8                 # IP
+publiceye scan example.com -p dns      # registros DNS via DoH
+publiceye scan 8.8.8.8                 # IP (inclui DNS reverso/PTR)
 publiceye cep 01310-100                # endereço de um CEP (ViaCEP)
 publiceye cnpj 11.222.333/0001-81      # dados públicos de uma empresa (CNPJ)
 publiceye weather -23.55,-46.63        # clima atual por coordenadas (Open-Meteo)
 publiceye weather "São Paulo"          # clima atual por cidade (Open-Meteo)
 publiceye coin bitcoin                 # cotação de criptomoeda (CoinGecko)
+publiceye fipe Fiat Uno --ano 2019     # preço de veículo na Tabela FIPE
+publiceye camara "Arthur Lira"         # dados do mandato de um deputado
 publiceye scan exemplo.com --json      # saída JSON
 publiceye scan exemplo.com -o out.json # salva o relatório
 ```
@@ -70,6 +81,7 @@ Alvo: example.com (domain) — 36 achados
 Fonte  | Tipo            | Valor                       | Confiança
 rdap   | event:created   | 1995-08-14T04:00:00Z        | high
 rdap   | nameserver      | hera.ns.cloudflare.com      | high
+dns    | dns:mx          | 10 mail.example.com         | high
 crtsh  | subdomain       | www.example.com             | high
 ...
 ```
@@ -77,7 +89,7 @@ crtsh  | subdomain       | www.example.com             | high
 ### Arquitetura
 
 - `core/` — modelos, contrato de `Provider`, registry e orquestração
-- `providers/` — uma fonte pública por arquivo (RDAP, Certificate Transparency, GeoIP…)
+- `providers/` — uma fonte pública por arquivo (RDAP, DNS/DoH, Certificate Transparency, GeoIP…)
 - `utils/` — cliente HTTP educado (rate limit, retry, User-Agent próprio)
 - `cli.py` — interface de linha de comando (Typer + Rich)
 
@@ -116,8 +128,10 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] Módulo de coleta com providers plugáveis (RDAP, Certificate Transparency)
 - [x] Rate limiting e retry por provider
 - [x] CLI com saída em tabela e JSON
-- [x] Mais fontes de dados abertos e GeoIP (ViaCEP, CNPJ, FIPE, ipwho.is)
-- [ ] DNS (DoH), WHOIS e geocodificação
+- [x] Mais fontes de dados abertos e GeoIP (ViaCEP, CNPJ, FIPE, Câmara, Open-Meteo, CoinGecko, ipwho.is)
+- [x] DNS público via DNS over HTTPS (DoH)
+- [ ] Cache de respostas por provider
+- [ ] WHOIS e geocodificação
 - [ ] Frontend de grafo (estilo Maltego)
 - [ ] Testes e documentação de cada fonte
 
