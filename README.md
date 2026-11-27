@@ -116,8 +116,8 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] Módulo de coleta com providers plugáveis (RDAP, Certificate Transparency)
 - [x] Rate limiting e retry por provider
 - [x] CLI com saída em tabela e JSON
-- [ ] Cache de respostas por provider
-- [ ] Mais fontes (DNS, WHOIS, dados abertos, geocodificação)
+- [x] Mais fontes de dados abertos e GeoIP (ViaCEP, CNPJ, FIPE, ipwho.is)
+- [ ] DNS (DoH), WHOIS e geocodificação
 - [ ] Frontend de grafo (estilo Maltego)
 - [ ] Testes e documentação de cada fonte
 
