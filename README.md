@@ -137,7 +137,6 @@ Não use para assediar, constranger ou coletar dados pessoais de terceiros sem b
 - [x] WHOIS (TCP porta 43) para domínios e IPs
 - [x] Geocodificação direta e reversa (Nominatim / OSM)
 - [ ] Frontend de grafo (estilo Maltego)
-- [ ] Testes e documentação de cada fonte
 
 ## Licença
 
