@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from publiceye import __version__
+from publiceye.core.camara import consultar_deputado
 from publiceye.core.fipe import search_fipe
 from publiceye.core.models import TargetType
 from publiceye.core.provider import detect_target_type
@@ -173,6 +174,26 @@ def fipe(
     """Preço e dados de um veículo na Tabela FIPE (marca/modelo/ano)."""
     try:
         report = asyncio.run(search_fipe(marca, modelo, ano=ano, tipo=tipo))
+    except ValueError as exc:
+        console.print(f"[red]Erro:[/red] {exc}")
+        raise typer.Exit(code=2) from None
+    _emit(report, as_json, output)
+
+
+@app.command()
+def camara(
+    nome: Optional[str] = typer.Argument(None, help="Nome do deputado para buscar."),
+    deputado_id: Optional[int] = typer.Option(None, "--id", help="ID do deputado na API."),
+    uf: Optional[str] = typer.Option(None, "--uf", help="Filtrar por UF, ex.: SP."),
+    partido: Optional[str] = typer.Option(None, "--partido", help="Filtrar por partido, ex.: PT."),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Dados públicos do mandato de um deputado federal (Câmara dos Deputados)."""
+    try:
+        report = asyncio.run(
+            consultar_deputado(nome, deputado_id=deputado_id, uf=uf, partido=partido)
+        )
     except ValueError as exc:
         console.print(f"[red]Erro:[/red] {exc}")
         raise typer.Exit(code=2) from None
