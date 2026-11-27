@@ -30,7 +30,7 @@ Todas públicas e com API/ToS que permitem uso:
 - APIs de domínio e DNS (WHOIS, RDAP)
 - Certificados públicos (Certificate Transparency / crt.sh)
 - Geocodificação e mapas abertos (Nominatim / OSM)
-- Registros públicos de empresas e diários oficiais
+- Registros públicos de empresas e diários oficiais (ex.: CNPJ via BrasilAPI)
 - Endereços e CEPs (ViaCEP)
 - APIs de notícias e conteúdo aberto
 
@@ -53,6 +53,7 @@ publiceye scan example.com             # coleta em domínio (usa todos os provid
 publiceye scan example.com -p rdap     # só um provider
 publiceye scan 8.8.8.8                 # IP
 publiceye cep 01310-100                # endereço de um CEP (ViaCEP)
+publiceye cnpj 11.222.333/0001-81      # dados públicos de uma empresa (CNPJ)
 publiceye scan exemplo.com --json      # saída JSON
 publiceye scan exemplo.com -o out.json # salva o relatório
 ```

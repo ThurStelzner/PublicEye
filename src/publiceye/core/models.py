@@ -20,6 +20,7 @@ class TargetType(str, Enum):
     IP = "ip"
     EMAIL = "email"
     CEP = "cep"
+    CNPJ = "cnpj"
     UNKNOWN = "unknown"
 
 

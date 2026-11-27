@@ -52,12 +52,12 @@ def list_providers() -> None:
 
 @app.command()
 def scan(
-    target: str = typer.Argument(..., help="Domínio, IP, e-mail ou CEP a investigar."),
+    target: str = typer.Argument(..., help="Domínio, IP, e-mail, CEP ou CNPJ a investigar."),
     provider: Optional[list[str]] = typer.Option(
         None, "--provider", "-p", help="Executar só estes providers (repetível)."
     ),
     target_type: Optional[str] = typer.Option(
-        None, "--type", help="Força o tipo do alvo: domain | ip | email | cep."
+        None, "--type", help="Força o tipo do alvo: domain | ip | email | cep | cnpj."
     ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(
@@ -99,6 +99,25 @@ def cep(
         raise typer.Exit(code=2)
     report = asyncio.run(
         run_scan(value, providers=["viacep"], target_type=TargetType.CEP)
+    )
+    _emit(report, as_json, output)
+
+
+@app.command()
+def cnpj(
+    value: str = typer.Argument(
+        ..., metavar="CNPJ", help="CNPJ, ex.: 11.222.333/0001-81 ou 11222333000181."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Consulta um CNPJ (dados públicos da empresa via BrasilAPI)."""
+    _ensure_providers()
+    if detect_target_type(value) is not TargetType.CNPJ:
+        console.print(f"[red]CNPJ inválido:[/red] {value!r}")
+        raise typer.Exit(code=2)
+    report = asyncio.run(
+        run_scan(value, providers=["cnpj"], target_type=TargetType.CNPJ)
     )
     _emit(report, as_json, output)
 
