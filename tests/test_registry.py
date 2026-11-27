@@ -5,7 +5,13 @@ from publiceye.core.registry import all_providers, load_builtin, providers_for
 def test_builtin_providers_registered():
     load_builtin()
     names = set(all_providers())
-    assert {"rdap", "crtsh"} <= names
+    assert {
+        "rdap",
+        "crtsh",
+        "cnpj",
+        "viacep",
+        "open-meteo",
+    } <= names
 
 
 def test_providers_for_domain_includes_rdap_and_crtsh():
@@ -19,3 +25,9 @@ def test_providers_for_ip_excludes_crtsh():
     names = {cls.name for cls in providers_for(TargetType.IP)}
     assert "rdap" in names
     assert "crtsh" not in names
+
+
+def test_providers_for_weather():
+    load_builtin()
+    weather = {cls.name for cls in providers_for(TargetType.WEATHER)}
+    assert weather == {"open-meteo"}

@@ -53,12 +53,16 @@ def list_providers() -> None:
 
 @app.command()
 def scan(
-    target: str = typer.Argument(..., help="Domínio, IP, e-mail, CEP ou CNPJ a investigar."),
+    target: str = typer.Argument(
+        ..., help="Domínio, IP, e-mail, CEP, CNPJ ou coordenadas (lat,lon)."
+    ),
     provider: Optional[list[str]] = typer.Option(
         None, "--provider", "-p", help="Executar só estes providers (repetível)."
     ),
     target_type: Optional[str] = typer.Option(
-        None, "--type", help="Força o tipo do alvo: domain | ip | email | cep | cnpj."
+        None,
+        "--type",
+        help="Força o tipo do alvo: domain | ip | email | cep | cnpj | weather.",
     ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(
@@ -119,6 +123,24 @@ def cnpj(
         raise typer.Exit(code=2)
     report = asyncio.run(
         run_scan(value, providers=["cnpj"], target_type=TargetType.CNPJ)
+    )
+    _emit(report, as_json, output)
+
+
+@app.command(context_settings={"ignore_unknown_options": True})
+def weather(
+    value: str = typer.Argument(
+        ...,
+        metavar="LOCAL",
+        help="Coordenadas (ex.: -23.55,-46.63) ou nome da cidade (ex.: São Paulo).",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Clima atual por coordenadas ou cidade (Open-Meteo)."""
+    _ensure_providers()
+    report = asyncio.run(
+        run_scan(value, providers=["open-meteo"], target_type=TargetType.WEATHER)
     )
     _emit(report, as_json, output)
 

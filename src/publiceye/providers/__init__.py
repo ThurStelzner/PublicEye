@@ -1,6 +1,13 @@
 """Providers embutidos e seu carregamento."""
 
-from publiceye.providers import cnpj, crtsh, geoip, rdap, viacep  # noqa: F401
+from publiceye.providers import (  # noqa: F401
+    cnpj,
+    crtsh,
+    geoip,
+    open_meteo,
+    rdap,
+    viacep,
+)
 
 
 def load() -> None:

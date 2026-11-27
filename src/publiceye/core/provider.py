@@ -17,6 +17,16 @@ IPV4_RE = re.compile(
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 CEP_RE = re.compile(r"^\d{5}-?\d{3}$")
 CNPJ_RE = re.compile(r"^\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}$")
+COORDS_RE = re.compile(r"^(-?\d{1,3}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)$")
+
+
+def is_coordinates(value: str) -> bool:
+    """Confere se o alvo é `lat,lon` dentro dos intervalos válidos."""
+    match = COORDS_RE.match(value.strip())
+    if not match:
+        return False
+    lat, lon = float(match.group(1)), float(match.group(2))
+    return -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0
 
 
 def is_valid_cnpj(value: str) -> bool:
@@ -46,6 +56,8 @@ def detect_target_type(target: str) -> TargetType:
         return TargetType.CEP
     if CNPJ_RE.match(t) and is_valid_cnpj(t):
         return TargetType.CNPJ
+    if is_coordinates(t):
+        return TargetType.WEATHER
     if DOMAIN_RE.match(t):
         return TargetType.DOMAIN
     return TargetType.UNKNOWN
