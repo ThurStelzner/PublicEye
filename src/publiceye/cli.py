@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -18,6 +19,7 @@ from publiceye.core.models import TargetType
 from publiceye.core.provider import detect_target_type, parse_coordinates
 from publiceye.core.registry import all_providers, load_builtin
 from publiceye.core.runner import run_scan
+from publiceye.utils.cache import ResponseCache
 
 app = typer.Typer(
     name="publiceye",
@@ -27,9 +29,52 @@ app = typer.Typer(
 )
 console = Console()
 
+cache_app = typer.Typer(help="Gerencia o cache de respostas HTTP.")
+app.add_typer(cache_app, name="cache")
+
+
+@app.callback()
+def _main(
+    no_cache: bool = typer.Option(
+        False, "--no-cache", help="Não usar nem gravar o cache de respostas."
+    ),
+    cache_ttl: Optional[float] = typer.Option(
+        None, "--cache-ttl", help="Validade do cache em segundos (padrão: 3600)."
+    ),
+    cache_dir: Optional[Path] = typer.Option(
+        None, "--cache-dir", help="Diretório do cache (padrão: cache do SO)."
+    ),
+) -> None:
+    """Configuração global; as opções valem para todos os comandos."""
+    if no_cache:
+        os.environ["PUBLICEEYE_NO_CACHE"] = "1"
+    if cache_ttl is not None:
+        os.environ["PUBLICEEYE_CACHE_TTL"] = str(cache_ttl)
+    if cache_dir is not None:
+        os.environ["PUBLICEEYE_CACHE_DIR"] = str(cache_dir)
+
 
 def _ensure_providers() -> None:
     load_builtin()
+
+
+@cache_app.command("info")
+def cache_info() -> None:
+    """Mostra o diretório do cache e quantas entradas estão guardadas."""
+    cache = ResponseCache()
+    count, size = cache.stats()
+    console.print(f"[bold]Cache:[/bold] {cache.directory}")
+    console.print(
+        f"[bold]{count}[/bold] entradas — {size / 1024:.1f} KiB em disco"
+    )
+
+
+@cache_app.command("clear")
+def cache_clear() -> None:
+    """Apaga todas as respostas cacheadas."""
+    cache = ResponseCache()
+    removed = cache.clear()
+    console.print(f"[green]Cache limpo:[/green] {removed} entradas removidas.")
 
 
 @app.command()
@@ -182,7 +227,7 @@ def geocode(
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
 ) -> None:
-    """Geocodificação direta (endereço → coordenadas) e reversa (Nominatim)."""
+    """Geocodificação direta (endereço -> coordenadas) e reversa (Nominatim)."""
     _ensure_providers()
     if reverse and parse_coordinates(value) is None:
         console.print(f"[red]Coordenadas inválidas:[/red] {value!r}")

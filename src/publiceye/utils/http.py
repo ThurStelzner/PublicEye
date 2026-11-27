@@ -1,4 +1,4 @@
-"""Utilidades de rede: cliente HTTP assíncrono, educado e identificado."""
+"""Utilidades de rede: cliente HTTP assíncrono, educado, identificado e com cache."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from publiceye.core.provider import ProviderContext
+from publiceye.utils.cache import ResponseCache, get_default_cache
 
 # Status tratados como transitórios (vale retentar).
 RETRY_STATUSES = {429, 500, 502, 503, 504}
@@ -33,7 +34,8 @@ class RateLimiter:
 
 
 class HttpClient:
-    """Wrapper sobre httpx.AsyncClient que se identifica, respeita limites e retenta."""
+    """Wrapper sobre httpx.AsyncClient que se identifica, respeita limites,
+    retenta e cacheia respostas GET em disco."""
 
     def __init__(self, ctx: ProviderContext, min_interval: float = 0.5) -> None:
         self._ctx = ctx
@@ -46,6 +48,13 @@ class HttpClient:
             },
             follow_redirects=True,
         )
+        self._cache: ResponseCache | None = None
+        if ctx.use_cache:
+            self._cache = (
+                ResponseCache(ctx.cache_dir, ctx.cache_ttl)
+                if ctx.cache_dir
+                else get_default_cache()
+            )
 
     async def __aenter__(self) -> "HttpClient":
         return self
@@ -53,25 +62,54 @@ class HttpClient:
     async def __aexit__(self, *exc: Any) -> None:
         await self._client.aclose()
 
+    def _ttl(self, cache_ttl: float | None) -> float:
+        return self._ctx.cache_ttl if cache_ttl is None else cache_ttl
+
     async def get_json(
         self,
         url: str,
         *,
         retries: int = 2,
         retry_statuses: set[int] | None = None,
+        cache_ttl: float | None = None,
         **kwargs: Any,
     ) -> Any:
+        params = kwargs.get("params")
+        ttl = self._ttl(cache_ttl)
+        if self._cache is not None:
+            cached = self._cache.get("GET", url, params, ttl)
+            if cached is not None:
+                return cached
+
         statuses = retry_statuses if retry_statuses is not None else RETRY_STATUSES
         resp = await self._get(url, retries=retries, retry_statuses=statuses, **kwargs)
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if self._cache is not None:
+            self._cache.set("GET", url, params, data, ttl)
+        return data
 
     async def get_text(
-        self, url: str, *, retries: int = 2, **kwargs: Any
+        self,
+        url: str,
+        *,
+        retries: int = 2,
+        cache_ttl: float | None = None,
+        **kwargs: Any,
     ) -> str:
+        params = kwargs.get("params")
+        ttl = self._ttl(cache_ttl)
+        if self._cache is not None:
+            cached = self._cache.get("GET", url, params, ttl)
+            if cached is not None:
+                return cached
+
         resp = await self._get(url, retries=retries, **kwargs)
         resp.raise_for_status()
-        return resp.text
+        text = resp.text
+        if self._cache is not None:
+            self._cache.set("GET", url, params, text, ttl)
+        return text
 
     async def _get(
         self,
@@ -99,4 +137,3 @@ class HttpClient:
                 raise
         assert last_exc is not None
         raise last_exc
-

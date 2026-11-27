@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import abc
+import os
 import re
 from dataclasses import dataclass, field
 
@@ -70,6 +71,10 @@ def detect_target_type(target: str) -> TargetType:
     return TargetType.UNKNOWN
 
 
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass
 class ProviderContext:
     """Configuração passada a cada provider em tempo de execução."""
@@ -77,6 +82,15 @@ class ProviderContext:
     timeout: float = 30.0
     user_agent: str = "PublicEye/0.1 (+https://github.com/ThurStelzner/PublicEye)"
     options: dict = field(default_factory=dict)
+    use_cache: bool = field(
+        default_factory=lambda: not _env_flag("PUBLICEEYE_NO_CACHE")
+    )
+    cache_ttl: float = field(
+        default_factory=lambda: float(os.environ.get("PUBLICEEYE_CACHE_TTL", 3600.0))
+    )
+    cache_dir: str | None = field(
+        default_factory=lambda: os.environ.get("PUBLICEEYE_CACHE_DIR") or None
+    )
 
 
 class Provider(abc.ABC):
