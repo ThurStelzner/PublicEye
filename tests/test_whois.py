@@ -73,11 +73,12 @@ async def test_whois_parses_domain_registry(fake_query):
     # Prosa com ":" não vira achado.
     assert not any("icann" in f.value for f in findings)
 
-    assert calls == [("whois.iana.org", "example.com"), ("whois.registry.test", "example.com")]
+    assert calls == [("whois.iana.org", "com"), ("whois.registry.test", "example.com")]
 
 
 async def test_whois_parses_ip_registry(fake_query):
-    fake_query({"whois.iana.org": IANA_IP, "whois.rir.test": RIR_IP})
+    # IP não passa pela IANA: o bootstrap é o ARIN, que refere ao RIR.
+    calls = fake_query({"whois.arin.net": IANA_IP.replace("refer:", "ReferralServer:"), "whois.rir.test": RIR_IP})
     findings = await whois_mod.WhoisProvider().run("8.8.8.8", ProviderContext())
     got = {f.kind: f.value for f in findings}
 
@@ -86,6 +87,8 @@ async def test_whois_parses_ip_registry(fake_query):
     assert got["whois:abuse_email"] == "network-abuse@google.com"
     abuse = next(f for f in findings if f.kind == "whois:abuse_email")
     assert abuse.confidence is Confidence.MEDIUM
+    assert calls[0] == ("whois.arin.net", "8.8.8.8")
+    assert not any(host == "whois.iana.org" for host, _ in calls)
 
 
 async def test_whois_not_found_returns_nothing(fake_query):

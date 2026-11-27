@@ -10,6 +10,7 @@ Documentação: https://www.iana.org/domains/root/db
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import re
 
 from publiceye.core.models import Confidence, Finding, TargetType
@@ -138,15 +139,14 @@ class WhoisProvider(Provider):
 
 
 async def _lookup(query: str, timeout: float) -> str:
-    """Consulta a IANA e segue a referência até o registro autoritativo."""
+    """Descobre o registro autoritativo e segue referências até os dados."""
     timeout = min(timeout, 20.0)
-    text = await _query(_IANA, query, timeout)
-    host = _referral(text)
+    host = await _bootstrap_host(query, timeout)
     if not host:
         return ""
 
     last_good = ""
-    for attempt in range(1, _MAX_QUERIES):
+    for _ in range(_MAX_QUERIES):
         await asyncio.sleep(_DELAY)
         try:
             text = await _query(host, query, timeout)
@@ -163,6 +163,27 @@ async def _lookup(query: str, timeout: float) -> str:
         host = next_host
 
     return last_good
+
+
+async def _bootstrap_host(query: str, timeout: float) -> str | None:
+    """Servidor WHOIS inicial: IANA (pelo TLD) para domínios, ARIN para IPs."""
+    if _is_ip(query):
+        return "whois.arin.net"
+
+    tld = query.rsplit(".", 1)[-1] if "." in query else query
+    host = _referral(await _query(_IANA, tld, timeout))
+    if host:
+        return host
+    # fallback: alguns TLDs só respondem à consulta completa
+    return _referral(await _query(_IANA, query, timeout))
+
+
+def _is_ip(query: str) -> bool:
+    try:
+        ipaddress.ip_address(query)
+        return True
+    except ValueError:
+        return False
 
 
 async def _query(host: str, query: str, timeout: float) -> str:
@@ -197,7 +218,7 @@ def _referral(text: str) -> str | None:
         key, sep, value = line.partition(":")
         if not sep:
             continue
-        if key.strip().lower() not in {"refer", "whois", "registrar whois server", "referralserver"}:
+        if key.strip().lower() not in {"refer", "whois", "referralserver"}:
             continue
         host = value.strip()
         if host.lower().startswith("whois://"):
