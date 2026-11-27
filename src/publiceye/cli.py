@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from publiceye import __version__
+from publiceye.core.fipe import search_fipe
 from publiceye.core.models import TargetType
 from publiceye.core.provider import detect_target_type
 from publiceye.core.registry import all_providers, load_builtin
@@ -119,6 +120,24 @@ def cnpj(
     report = asyncio.run(
         run_scan(value, providers=["cnpj"], target_type=TargetType.CNPJ)
     )
+    _emit(report, as_json, output)
+
+
+@app.command()
+def fipe(
+    marca: str = typer.Argument(..., help="Marca do veículo, ex.: Fiat."),
+    modelo: str = typer.Argument(..., help="Modelo, ex.: Uno."),
+    ano: Optional[int] = typer.Option(None, "--ano", "-a", help="Ano-modelo, ex.: 2019."),
+    tipo: str = typer.Option("carros", "--tipo", help="carros | motos | caminhoes."),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Preço e dados de um veículo na Tabela FIPE (marca/modelo/ano)."""
+    try:
+        report = asyncio.run(search_fipe(marca, modelo, ano=ano, tipo=tipo))
+    except ValueError as exc:
+        console.print(f"[red]Erro:[/red] {exc}")
+        raise typer.Exit(code=2) from None
     _emit(report, as_json, output)
 
 
