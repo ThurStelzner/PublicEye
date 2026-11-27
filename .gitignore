@@ -19,8 +19,10 @@ build/
 out/
 *.log
 .cache/
+.pytest_cache/
 output/
 reports/
+report*.json
 
 # Editor / OS
 .vscode/

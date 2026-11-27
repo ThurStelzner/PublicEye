@@ -1,0 +1,123 @@
+"""Interface de linha de comando do PublicEye."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from pathlib import Path
+from typing import Optional
+
+import typer
+from rich.console import Console
+from rich.table import Table
+
+from publiceye import __version__
+from publiceye.core.models import TargetType
+from publiceye.core.provider import detect_target_type
+from publiceye.core.registry import all_providers, load_builtin
+from publiceye.core.runner import run_scan
+
+app = typer.Typer(
+    name="publiceye",
+    help="OSINT family friendly: coleta ética a partir de fontes públicas.",
+    no_args_is_help=True,
+    add_completion=False,
+)
+console = Console()
+
+
+def _ensure_providers() -> None:
+    load_builtin()
+
+
+@app.command()
+def version() -> None:
+    """Mostra a versão do PublicEye."""
+    console.print(f"publiceye [bold cyan]{__version__}[/bold cyan]")
+
+
+@app.command("providers")
+def list_providers() -> None:
+    """Lista as fontes (providers) disponíveis."""
+    _ensure_providers()
+    table = Table(title="Providers")
+    table.add_column("Nome", style="bold cyan")
+    table.add_column("Alvos")
+    table.add_column("Descrição")
+    for cls in sorted(all_providers().values(), key=lambda c: c.name):
+        alvos = ", ".join(t.value for t in cls.target_types) or "qualquer"
+        table.add_row(cls.name, alvos, cls.description)
+    console.print(table)
+
+
+@app.command()
+def scan(
+    target: str = typer.Argument(..., help="Domínio, IP ou e-mail a investigar."),
+    provider: Optional[list[str]] = typer.Option(
+        None, "--provider", "-p", help="Executar só estes providers (repetível)."
+    ),
+    target_type: Optional[str] = typer.Option(
+        None, "--type", help="Força o tipo do alvo: domain | ip | email."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Salvar o relatório JSON neste arquivo."
+    ),
+) -> None:
+    """Executa a coleta sobre um alvo e mostra os achados."""
+    _ensure_providers()
+
+    ttype = None
+    if target_type:
+        try:
+            ttype = TargetType(target_type.lower())
+        except ValueError:
+            console.print(f"[red]Tipo inválido:[/red] {target_type}")
+            raise typer.Exit(code=2) from None
+    elif detect_target_type(target) is TargetType.UNKNOWN:
+        console.print(
+            f"[red]Não reconheci o alvo[/red] {target!r}. Use --type para forçar."
+        )
+        raise typer.Exit(code=2)
+
+    report = asyncio.run(
+        run_scan(target, providers=provider, target_type=ttype)
+    )
+    data = report.to_dict()
+
+    if output:
+        output.write_text(json.dumps(data, indent=2, ensure_ascii=False), "utf-8")
+        console.print(f"[green]Relatório salvo em[/green] {output}")
+
+    if as_json:
+        console.print_json(json.dumps(data))
+        return
+
+    _print_report(data)
+
+
+def _print_report(data: dict) -> None:
+    console.print(
+        f"\n[bold]Alvo:[/bold] {data['target']} "
+        f"([cyan]{data['target_type']}[/cyan]) — "
+        f"[bold]{data['count']}[/bold] achados"
+    )
+    if not data["findings"] and not data["errors"]:
+        console.print("[yellow]Nenhum resultado. Fonte pode estar vazia ou indisponível.[/yellow]")
+        return
+
+    table = Table(show_lines=False)
+    table.add_column("Fonte", style="cyan")
+    table.add_column("Tipo", style="magenta")
+    table.add_column("Valor")
+    table.add_column("Confiança", justify="center")
+    for f in data["findings"]:
+        table.add_row(f["source"], f["kind"], str(f["value"]), f["confidence"])
+    console.print(table)
+
+    for err in data["errors"]:
+        console.print(f"[red]erro[/red] ({err['source']}): {err['error']}")
+
+
+if __name__ == "__main__":
+    app()

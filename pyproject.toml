@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "publiceye"
+version = "0.1.0"
+description = "OSINT family friendly: coleta ética e 100% legal a partir de fontes públicas."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Arthur Iantas Stelzner", email = "arthurstelzner@gmail.com" }]
+keywords = ["osint", "recon", "threat-intelligence", "public-data"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "typer>=0.12",
+  "httpx>=0.27",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+publiceye = "publiceye.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/publiceye"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
