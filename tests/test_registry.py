@@ -11,6 +11,7 @@ def test_builtin_providers_registered():
         "cnpj",
         "viacep",
         "open-meteo",
+        "coingecko",
     } <= names
 
 
@@ -27,7 +28,9 @@ def test_providers_for_ip_excludes_crtsh():
     assert "crtsh" not in names
 
 
-def test_providers_for_weather():
+def test_providers_for_weather_and_crypto():
     load_builtin()
     weather = {cls.name for cls in providers_for(TargetType.WEATHER)}
+    crypto = {cls.name for cls in providers_for(TargetType.CRYPTO)}
     assert weather == {"open-meteo"}
+    assert crypto == {"coingecko"}

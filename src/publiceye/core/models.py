@@ -22,6 +22,7 @@ class TargetType(str, Enum):
     CEP = "cep"
     CNPJ = "cnpj"
     WEATHER = "weather"
+    CRYPTO = "crypto"
     UNKNOWN = "unknown"
 
 

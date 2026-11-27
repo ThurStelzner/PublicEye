@@ -62,7 +62,7 @@ def scan(
     target_type: Optional[str] = typer.Option(
         None,
         "--type",
-        help="Força o tipo do alvo: domain | ip | email | cep | cnpj | weather.",
+        help="Força o tipo do alvo: domain | ip | email | cep | cnpj | weather | crypto.",
     ),
     as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
     output: Optional[Path] = typer.Option(
@@ -141,6 +141,22 @@ def weather(
     _ensure_providers()
     report = asyncio.run(
         run_scan(value, providers=["open-meteo"], target_type=TargetType.WEATHER)
+    )
+    _emit(report, as_json, output)
+
+
+@app.command()
+def coin(
+    value: str = typer.Argument(
+        ..., metavar="MOEDA", help="ID, símbolo ou nome, ex.: bitcoin, btc, ethereum."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Saída em JSON."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Salvar JSON."),
+) -> None:
+    """Cotação e dados de uma criptomoeda (CoinGecko)."""
+    _ensure_providers()
+    report = asyncio.run(
+        run_scan(value, providers=["coingecko"], target_type=TargetType.CRYPTO)
     )
     _emit(report, as_json, output)
 

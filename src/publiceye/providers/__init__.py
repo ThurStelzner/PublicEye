@@ -2,6 +2,7 @@
 
 from publiceye.providers import (  # noqa: F401
     cnpj,
+    coingecko,
     crtsh,
     geoip,
     open_meteo,

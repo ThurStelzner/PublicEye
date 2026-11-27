@@ -33,6 +33,7 @@ Todas públicas e com API/ToS que permitem uso:
 - Registros públicos de empresas e diários oficiais (ex.: CNPJ via BrasilAPI)
 - Endereços e CEPs (ViaCEP)
 - Clima e geocodificação abertos (Open-Meteo)
+- Cotações de criptomoedas (CoinGecko)
 - APIs de notícias e conteúdo aberto
 
 > Nenhuma fonte entra sem revisão de termos de uso e licença.
@@ -57,6 +58,7 @@ publiceye cep 01310-100                # endereço de um CEP (ViaCEP)
 publiceye cnpj 11.222.333/0001-81      # dados públicos de uma empresa (CNPJ)
 publiceye weather -23.55,-46.63        # clima atual por coordenadas (Open-Meteo)
 publiceye weather "São Paulo"          # clima atual por cidade (Open-Meteo)
+publiceye coin bitcoin                 # cotação de criptomoeda (CoinGecko)
 publiceye scan exemplo.com --json      # saída JSON
 publiceye scan exemplo.com -o out.json # salva o relatório
 ```
